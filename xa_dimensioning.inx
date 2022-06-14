@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<inkscape-extension xmlns="http://www.inkscape.org/namespace/inkscape/extension">
+  <name>xa Dimensioning</name>
+  <id>space.antares.xa_dimensioning</id>
+  <!--
+  <param name="param_str" type="string" gui-text="Your name:"></param>
+  -->
+  <param name="tab" type="notebook">
+    <page name="options" _gui-text="Options">
+      <param name="hide" type="bool" appearance="full" indent="0" _gui-text="Hide dimensioned object after having been annotated">true</param>
+      <param name="linecolor" type="color" appearance="full" gui-text="Color of dimension indicating lines">0xFFA500FF</param>
+      <spacer/>
+      <param name="useUU" type="bool" appearance="full" indent="0" _gui-text="Use document units (uu) instead of px">true</param>
+      <spacer/>
+      <param name="fontsize" type="int" appearance="minimal" min="1" max="800" indent="1" _gui-text="Font size (px or uu)">10</param>
+      <param name="xoffset" type="float" appearance="minimal" indent="1" _gui-text="Horizontal dimension indicating line offset (px or uu)">50.0</param>
+      <param name="yoffset" type="float" appearance="minimal" indent="1" _gui-text="Vertical dimension indicating line offset (px or uu)">50.0</param>
+      <!--param name="color_param" gui-text="Nail Color" type="color">-1</param-->
+      <!--param name="option_param" type="optiongroup" appearance="radio" gui-text="I like:">
+        <option value="choc">Chocolate</option>
+        <option value="shoe">Shoes</option>
+        <option value="oper">Opera</option>
+      </param-->
+    </page>
+    <page name="help" _gui-text="Help">
+      <label xml:space="preserve">
+Annotate rectangulars or paths with dimensions in terms of document units.
+
+Copyright (C) by XA, VI 2022. All rights reserved.
+      </label>
+     </page>
+   </param>
+  <!--
+   <param name="bool_param" type="bool" gui-text="God powers?">true</param>
+   -->
+  <effect>
+    <!--object-type>path</object-type-->
+    <effects-menu>
+      <submenu name="xa"/>
+    </effects-menu>
+  </effect>
+  <script>
+    <command location="inx" interpreter="python">xa_dimensioning.py</command>
+  </script>
+</inkscape-extension>
