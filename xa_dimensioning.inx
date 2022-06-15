@@ -9,13 +9,16 @@
     <page name="options" _gui-text="Options">
       <param name="hide" type="bool" appearance="full" indent="0" _gui-text="Hide dimensioned object after having been annotated">true</param>
       <param name="perp" type="bool" appearance="full" indent="0" _gui-text="Annotate un-closed paths perpendicularly">false</param>
-      <param name="linecolor" type="color" appearance="full" gui-text="Color of dimension indicating lines">0xFFA500FF</param>
+      <param name="linecolor" type="color" appearance="minimal" gui-text="Color of dimension indicating lines">0xFFA500FF</param>
       <spacer/>
       <param name="useUU" type="bool" appearance="full" indent="0" _gui-text="Use document units (uu) instead of px">true</param>
-      <spacer/>
-      <param name="fontsize" type="int" appearance="minimal" min="1" max="800" indent="1" _gui-text="Font size (px or uu)">10</param>
-      <param name="xoffset" type="float" appearance="minimal" indent="1" _gui-text="Horizontal dimension indicating line offset (px or uu)">50.0</param>
-      <param name="yoffset" type="float" appearance="minimal" indent="1" _gui-text="Vertical dimension indicating line offset (px or uu)">50.0</param>
+      <param name="xoffset" type="float" appearance="minimal" min="-10000" max="10000" indent="1" _gui-text="Horizontal dimension indicating line offset (px or uu)">50.0</param>
+      <param name="yoffset" type="float" appearance="minimal" min="-10000" max="10000" indent="1" _gui-text="Vertical dimension indicating line offset (px or uu)">50.0</param>
+      <hbox>
+        <param name="fontsize" type="int" appearance="minimal" min="1" max="1000" indent="1" _gui-text="Font size (px or uu)">10</param>
+        <spacer size="expand" />
+        <param name="precision" type="int" appearance="minimal" min="0" max="25" indent="1" _gui-text="Precision">2</param>
+      </hbox>
       <!--param name="color_param" gui-text="Nail Color" type="color">-1</param-->
       <!--param name="option_param" type="optiongroup" appearance="radio" gui-text="I like:">
         <option value="choc">Chocolate</option>
