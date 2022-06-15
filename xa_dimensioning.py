@@ -14,6 +14,7 @@ XA Dimensioning extension for Inkscape v1.2+.
 import inkex
 import inkex.bezier
 from inkex.localization import inkex_gettext as _
+from math import sqrt
 
 class XADimensioning(inkex.EffectExtension):
     """XA Measurements extension"""
@@ -28,6 +29,13 @@ class XADimensioning(inkex.EffectExtension):
             type=inkex.Boolean,
             default=True,
             help="Hide dimensioned object after having been annotated",
+        )
+        pars.add_argument(
+            "-p",
+            "--perp",
+            type=inkex.Boolean,
+            default=False,
+            help="Annotate un-closed paths perpendicularly",
         )
         pars.add_argument(
             "-L",
@@ -82,9 +90,12 @@ class XADimensioning(inkex.EffectExtension):
             raise inkex.AbortExtension(_("Please select at least one path or rectangle object."))
 
         if nodesPath:
-           for node in nodesPath:
-                val = self._measurePath(node)
-                self._annotatePath(node, layer, dimVal=val)
+            if self.options.perp:
+                for node in nodesPath:
+                    self._annotatePathPerpendicularly(node, layer)
+            else:
+                for node in nodesPath:
+                    self._annotatePath(node, layer)
 
         if nodesRect:
             for node in nodesRect:
@@ -92,16 +103,7 @@ class XADimensioning(inkex.EffectExtension):
 
     ## Private implementation
 
-    def _measurePath(self, node):
-        csp = node.path.transform(node.composed_transform()).to_superpath()
-        slengths, stotal = inkex.bezier.csplength(csp)
-        return stotal
-
-    def _annotatePath(self, node, layer, *, dimVal=0):
-        bbox = node.bounding_box()
-        dx = 0
-        dy = 0
-
+    def _appendNewGroup(self, node, layer):
         group = inkex.Group()
         group.set("fill", None)
         group.set("stroke", self.options.linecolor)
@@ -109,6 +111,79 @@ class XADimensioning(inkex.EffectExtension):
         group.label = node.eid + "-xa-dimning"
         group.href = node
         layer.append(group)
+        return group
+
+    def _annotatePathPerpendicularly(self, node, layer):
+
+        # csp is a list of of segments, each a list of two+ control data triplets (incoming ctrl, point, outgoing ctrl)
+        def csp_seg_reduce_bz(csp_seg, asp=0, bsp=-1):
+            (spA, spB) = (csp_seg[asp], csp_seg[bsp])
+            return (spA[1], spA[2], spB[0], spB[1])
+
+        def csp_reduce_bz(csp, aseg=0, bseg=-1):
+            (segA, segB) = (csp[aseg], csp[bseg])
+            return (
+                csp_seg_reduce_bz(segA, 0, 1),
+                csp_seg_reduce_bz(segB, -2, -1)
+            )
+
+        csp = node.path.transform(node.composed_transform()).to_superpath()
+        slengths, stotal = inkex.bezier.csplength(csp)
+        bzA, bzB = csp_reduce_bz(csp)
+        if bzA[0] == bzA[1]: # straight line, when point == control point
+            ax = bzA[3][0] - bzA[0][0]
+            ay = bzA[3][1] - bzA[0][1]
+            scale = 1 / sqrt(ax**2 + ay**2)
+            ax *= scale * self.options.xoffset
+            ay *= scale * self.options.yoffset
+        else:
+            ax, ay = inkex.bezier.bezierslopeatt(bzA, 0.0) # slope at start[1] ((_c0, p0, d0), (c1, p1, d1), ...) of first[0] segment of csp
+        if bzB[3] == bzB[2]:
+            bx = bzB[3][0] - bzB[0][0]
+            by = bzB[3][1] - bzB[0][1]
+            scale = 1 / sqrt(bx**2 + by**2)
+            bx *= scale * self.options.xoffset
+            by *= scale * self.options.yoffset
+        else:
+            bx, by = inkex.bezier.bezierslopeatt(bzB, 1.0) # slope at end[-2] (..., (c2, p2, d2), (c1, p1, _d1)) of last[-1] segment of csp
+        p0 = bzA[0] # csp[0][0][1] # start point of csp
+        p1 = bzB[3] # csp[-1][-1][-2] # end point of csp
+        q0 = (p0[0] + ay*.5, p0[1] - ax*.5)
+        q1 = (p1[0] + by*.5, p1[1] - bx*.5)
+
+        group = self._appendNewGroup(node, layer)
+        line = inkex.PathElement()
+        line.set("d", "M %f %f l %f %f" % (p0[0], p0[1], ay, -ax ))
+        line.set("stroke-width", str(.5 * self._uuperpx))
+        #line.set(":xa-debug", "ax=%f ay=%f bx=%f by=%f" % (ax, ay, bx, by))
+        group.append(line)
+        line = inkex.PathElement()
+        line.set("d", "M %f %f l %f %f" % (p1[0], p1[1], by, -bx ))
+        line.set("stroke-width", str(.5 * self._uuperpx))
+        #line.set(":xa-debugA", "(%f, %f) (%f, %f) .. (%f, %f) (%f, %f)" % (bzA[0][0],bzA[0][1], bzA[1][0],bzA[1][1], bzA[2][0],bzA[2][1], bzA[3][0],bzA[3][1]))
+        #line.set(":xa-debugB", "(%f, %f) (%f, %f) .. (%f, %f) (%f, %f)" % (bzB[0][0],bzB[0][1], bzB[1][0],bzB[1][1], bzB[2][0],bzB[2][1], bzB[3][0],bzB[3][1]))
+        group.append(line)
+
+
+        line = inkex.PathElement()
+        line.set("d", "M %f %f L %f %f" % (q0[0], q0[1], q1[0], q1[1]))
+        line.set("stroke-width", str(self._uuperpx))
+        group.append(line)
+
+        textElt = line.add(inkex.TextElement())
+        textElt.set(":xa-dimning", "label")
+        textElt.label = node.eid + "-xa-dimning-vert-dim"
+        self._addText(node=textElt, dimVal=stotal, dx=ax*2, dy=ay*2, nodeHref=line, nodeRef=node, dimUnit=self._sunit)
+        group.append(textElt)
+
+
+
+    def _annotatePath(self, node, layer):
+        bbox = node.bounding_box()
+        dx = 0
+        dy = 0
+
+        group = self._appendNewGroup(node, layer)
 
         if bbox.width >= bbox.height:
             line = self._vert_line(bbox.left, [0, 2], bbox)
@@ -156,13 +231,7 @@ class XADimensioning(inkex.EffectExtension):
     def _annotateRect(self, node, layer):
         bbox = node.bounding_box()
 
-        group = inkex.Group()
-        group.set("fill", None)
-        group.set("stroke", self.options.linecolor)
-        group.set(":xa-dimning", "group")
-        group.label = node.eid + "-xa-dimning"
-        group.href = node
-        layer.append(group)
+        group = self._appendNewGroup(node, layer)
 
         lineH = self._horz_line(bbox.top, [0, 1], bbox)
         lineH.set("stroke-width", str(self._uuperpx))

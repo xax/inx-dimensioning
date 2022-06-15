@@ -8,6 +8,7 @@
   <param name="tab" type="notebook">
     <page name="options" _gui-text="Options">
       <param name="hide" type="bool" appearance="full" indent="0" _gui-text="Hide dimensioned object after having been annotated">true</param>
+      <param name="perp" type="bool" appearance="full" indent="0" _gui-text="Annotate un-closed paths perpendicularly">false</param>
       <param name="linecolor" type="color" appearance="full" gui-text="Color of dimension indicating lines">0xFFA500FF</param>
       <spacer/>
       <param name="useUU" type="bool" appearance="full" indent="0" _gui-text="Use document units (uu) instead of px">true</param>
