@@ -195,7 +195,7 @@ class XADimensioning(inkex.EffectExtension):
         textElt = line.add(inkex.TextElement())
         textElt.set(":xa-dimning", "label")
         textElt.label = f"{node.eid}-xa-dimning-vert-dim"
-        self._addText(node=textElt, dimVal=stotal, dx=ax*1.2, dy=ay*1.2, nodeHref=line, nodeRef=node, dimUnit=self._sunit)
+        self._addTextAlongPath(node=textElt, dimVal=stotal, dx=ax*1.2, dy=ay*1.2, nodeHref=line, nodeRef=node, dimUnit=self._sunit)
         group.append(textElt)
 
 
@@ -249,7 +249,7 @@ class XADimensioning(inkex.EffectExtension):
             textElt.label = f"{node.eid}-xa-dimning-vert-dim"
             dx = 2
 
-        self._addText(node=textElt, dimVal=bbox.height, dx=dx, dy=dy, nodeHref=line, nodeRef=node, dimUnit=self._sunit)
+        self._addTextAlongPath(node=textElt, dimVal=bbox.height, dx=dx, dy=dy, nodeHref=line, nodeRef=node, dimUnit=self._sunit)
         group.append(textElt)
 
         if self.options.hide:
@@ -297,13 +297,13 @@ class XADimensioning(inkex.EffectExtension):
         textElt = lineH.add(inkex.TextElement())
         textElt.set(":xa-dimning", "label")
         textElt.label = f"{node.eid}-xa-dimning-horz-dim"
-        self._addText(node=textElt, dimVal=bbox.width+stroke, dy=2, nodeHref=lineH, nodeRef=node, dimUnit=self._sunit)
+        self._addTextAlongPath(node=textElt, dimVal=bbox.width+stroke, dy=2, nodeHref=lineH, nodeRef=node, dimUnit=self._sunit)
         group.append(textElt)
 
         textElt = lineV.add(inkex.TextElement())
         textElt.set(":xa-dimning", "label")
         textElt.label = f"{node.eid}-xa-dimning-vert-dim"
-        self._addText(node=textElt, dimVal=bbox.height+stroke, dx=2, nodeHref=lineV, nodeRef=node, dimUnit=self._sunit)
+        self._addTextAlongPath(node=textElt, dimVal=bbox.height+stroke, dx=2, nodeHref=lineV, nodeRef=node, dimUnit=self._sunit)
         group.append(textElt)
 
         if self.options.hide:
@@ -327,7 +327,7 @@ class XADimensioning(inkex.EffectExtension):
         line.set("d", f"M {x} {y1} V {y2}")
         return line
 
-    def _addText(self, node, dimVal, *, nodeHref, nodeRef=None, dx=0, dy=0, dimUnit=None):
+    def _addTextAlongPath(self, node, dimVal, *, nodeHref, nodeRef=None, dx=0, dy=0, dimUnit=None):
         """Create text along path."""
         style = {
             "text-align": "center",
