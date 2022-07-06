@@ -7,33 +7,44 @@
   -->
   <param name="tab" type="notebook">
     <page name="options" _gui-text="Options">
-      <param name="hide" type="bool" appearance="full" indent="0" _gui-text="Hide dimensioned object after having been annotated">true</param>
       <param name="perp" type="bool" appearance="full" indent="0" _gui-text="Annotate un-closed paths perpendicularly">false</param>
-      <param name="linecolor" type="color" appearance="minimal" gui-text="Color of dimension indicating lines">0xFFA500FF</param>
       <spacer/>
-      <param name="useUU" type="bool" appearance="full" indent="0" _gui-text="Use document units (uu) instead of px">true</param>
+      <param name="hide" type="bool" appearance="full" indent="0" _gui-text="Hide dimensioned object after having been annotated">true</param>
+      <param name="useUU" type="bool" appearance="full" indent="0" _gui-text="Use document units (uu) instead of px">false</param>
+      <spacer/>
+      <hbox>
+        <param name="fontsize" type="int" appearance="minimal" min="1" max="1000" indent="0" _gui-text="Font size (px or uu)">24</param>
+        <spacer size="expand" />
+        <param name="annotunit" type="bool" appearance="minimal" indent="0" _gui-text="Annotate with unit">true</param>
+      </hbox>
+      <hbox>
+        <param name="distannot" type="float" appearance="minimal" min="1" max="1000" indent="0" _gui-text="Distance from line (px or uu)">30</param>
+        <spacer size="expand" />
+        <param name="precision" type="int" appearance="minimal" min="1" max="24" indent="0" _gui-text="Precision">2</param>
+      </hbox>
+      <spacer/>
+      <!--param name="mode" type="optiongroup" appearance="radio" _gui-text="How to handle objects while annotating:">
+        <option value="repl">Replace</option>
+        <option value="hide">Offset and hide</option>
+        <option value="offs">Offset and leave visible</option>
+      </param-->
       <param name="xoffset" type="float" appearance="minimal" min="-10000" max="10000" indent="1" _gui-text="Horizontal dimension indicating line offset (px or uu)">50.0</param>
       <param name="yoffset" type="float" appearance="minimal" min="-10000" max="10000" indent="1" _gui-text="Vertical dimension indicating line offset (px or uu)">50.0</param>
-      <hbox>
-        <param name="fontsize" type="int" appearance="minimal" min="1" max="1000" indent="1" _gui-text="Font size (px or uu)">10</param>
-        <spacer size="expand" />
-        <param name="precision" type="int" appearance="minimal" min="0" max="25" indent="1" _gui-text="Precision">2</param>
-      </hbox>
       <!--param name="color_param" gui-text="Nail Color" type="color">-1</param-->
-      <!--param name="option_param" type="optiongroup" appearance="radio" gui-text="I like:">
-        <option value="choc">Chocolate</option>
-        <option value="shoe">Shoes</option>
-        <option value="oper">Opera</option>
-      </param-->
+    </page>
+    <page name="style" _gui-text="Appearance">
+      <param name="linecolor" type="color" appearance="minimal" gui-text="Color of dimension indicating lines">0xFFA500FF</param>
     </page>
     <page name="help" _gui-text="Help">
       <label xml:space="preserve">
 Annotate rectangulars or paths with dimensions in terms of document units.
 
-Copyright (C) by XA, VI 2022. All rights reserved.
+Version 1.1.0
+Copyright (C) by XA, VI-VIII 2022. All rights reserved.
+
       </label>
-     </page>
-   </param>
+    </page>
+  </param>
   <!--
    <param name="bool_param" type="bool" gui-text="God powers?">true</param>
    -->

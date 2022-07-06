@@ -35,6 +35,13 @@ class XADimensioning(inkex.EffectExtension):
             help=_("Hide dimensioned object after having been annotated")
         )
         pars.add_argument(
+            "-M",
+            "--mode",
+            type=inkex.Boolean,
+            default=True,
+            help=_("How to handle objects while annotating")
+        )
+        pars.add_argument(
             "-P",
             "--perp",
             type=inkex.Boolean,
@@ -52,15 +59,21 @@ class XADimensioning(inkex.EffectExtension):
             "-u",
             "--useUU",
             type=inkex.Boolean,
-            default=True,
+            default=False,
             help=_("Use document units (uu) instead of px")
         )
         pars.add_argument(
             "-f",
             "--fontsize",
             type=int,
-            default=10,
+            default=24,
             help=_("Font size in px or uu")
+        )
+        pars.add_argument(
+            "--distannot",
+            type=float,
+            default=30.0,
+            help=_("distance line to annotation text (px or uu)")
         )
         pars.add_argument(
             "--xoffset",
@@ -81,19 +94,32 @@ class XADimensioning(inkex.EffectExtension):
             default=2,
             help=_("Number of significant digits after decimal point")
         )
+        pars.add_argument(
+            "-U",
+            "--annotunit",
+            type=inkex.Boolean,
+            default=True,
+            help=_("Annotate with unit")
+        )
 
     def effect(self):
         """Implement the effect extension API."""
-        # configuration probably to be made accessable
+        # configuration - probably to be made accessable
         self._startOffset = 50
         self._sunit = self.svg.document_unit
         self._uuperunit = self.svg.unittouu(f"1{self._sunit}")  # convert to document units
         self._uuperpx = self.svg.unittouu("1px")  # convert px to document units
-        #
+        # configuration values that need normalization
+        self._distAnnot = self.options.distannot
         if not self.options.useUU:
+            # parameters given in px but used in uu
+            self._distAnnot *= self._uuperpx
             self.options.xoffset *= self._uuperpx
             self.options.yoffset *= self._uuperpx
             self.options.fontsize *= self._uuperpx
+        # else:
+        #     # parameters given in uu but used in px
+
 
         layer = self.svg.get_current_layer()
         nodesPath = self.svg.selection.filter(inkex.PathElement)
@@ -194,11 +220,12 @@ class XADimensioning(inkex.EffectExtension):
 
         textElt = line.add(inkex.TextElement())
         textElt.set(":xa-dimning", "label")
-        textElt.label = f"{node.eid}-xa-dimning-vert-dim"
+        textElt.label = f"{node.eid}-xa-dimning-perp-dim"
         self._addTextAlongPath(node=textElt, dimVal=stotal, dx=ax*1.2, dy=ay*1.2, nodeHref=line, nodeRef=node, dimUnit=self._sunit)
         group.append(textElt)
 
-
+        if self.options.hide:
+            node.style["display"] = "none"
 
     def _annotatePath(self, node, layer):
         """Indicate and annotate a path (grid-orthogonal mode).
@@ -229,7 +256,7 @@ class XADimensioning(inkex.EffectExtension):
             textElt = line.add(inkex.TextElement())
             textElt.set(":xa-dimning", "label")
             textElt.label = f"{node.eid}-xa-dimning-horz-dim"
-            dy = 2
+            dy = self._distAnnot
         else:
             line = self._horz_line(bbox.top, [2, 0], bbox)
             line.set("stroke-width", str(.5 * self._uuperpx))
@@ -247,7 +274,7 @@ class XADimensioning(inkex.EffectExtension):
             textElt = line.add(inkex.TextElement())
             textElt.set(":xa-dimning", "label")
             textElt.label = f"{node.eid}-xa-dimning-vert-dim"
-            dx = 2
+            dx = self._distAnnot
 
         self._addTextAlongPath(node=textElt, dimVal=bbox.height, dx=dx, dy=dy, nodeHref=line, nodeRef=node, dimUnit=self._sunit)
         group.append(textElt)
@@ -297,17 +324,36 @@ class XADimensioning(inkex.EffectExtension):
         textElt = lineH.add(inkex.TextElement())
         textElt.set(":xa-dimning", "label")
         textElt.label = f"{node.eid}-xa-dimning-horz-dim"
-        self._addTextAlongPath(node=textElt, dimVal=bbox.width+stroke, dy=2, nodeHref=lineH, nodeRef=node, dimUnit=self._sunit)
+        self._addTextAlongPath(node=textElt, dimVal=bbox.width+stroke, dy=self._distAnnot, nodeHref=lineH, nodeRef=node, dimUnit=self._sunit)
         group.append(textElt)
 
         textElt = lineV.add(inkex.TextElement())
         textElt.set(":xa-dimning", "label")
         textElt.label = f"{node.eid}-xa-dimning-vert-dim"
-        self._addTextAlongPath(node=textElt, dimVal=bbox.height+stroke, dx=2, nodeHref=lineV, nodeRef=node, dimUnit=self._sunit)
+        self._addTextAlongPath(node=textElt, dimVal=bbox.height+stroke, dx=self._distAnnot, nodeHref=lineV, nodeRef=node, dimUnit=self._sunit)
         group.append(textElt)
 
         if self.options.hide:
             node.style["display"] = "none"
+
+    def _line_horz(self, a, *, delta, offset=0, style={}, markers={}):
+        """Create a horizontal line."""
+        line = inkex.PathElement()
+        line.set("d", f"M {a[0]} {a[1]+offset} H {delta}")
+        line.style = style
+
+    def _line_vert(self, a, *, delta, offset=0, style={}, markers={}):
+        """Create a vertical line."""
+        line = inkex.PathElement()
+        line.set("d", f"M {a[0]+offset} {a[1]} V {delta}")
+        line.style = style
+
+    def _line_perp(self, a, *, gradient, delta, offset=0, style={}, markers={}):
+        """Create a line at a perpendicular through a->gradient."""
+        scale = 1 / sqrt(gradient[0]**2 + gradient[1]**2)
+        line = inkex.PathElement()
+        line.set("d", f"M {a[0]} {a[1]} l {scale*gradient[1]*delta} {-scale*gradient[0]*delta}")
+        line.style = style
 
     def _horz_line(self, y, xlat, bbox):
         """Create a horzontal line."""
@@ -332,7 +378,7 @@ class XADimensioning(inkex.EffectExtension):
         style = {
             "text-align": "center",
             "vertical-align": "bottom",
-            "text-anchor": "start",
+            "text-anchor": "middle",
             "font-size": str(self.options.fontsize),
             "fill-opacity": "1.0",
             "stroke": "none",
@@ -348,14 +394,16 @@ class XADimensioning(inkex.EffectExtension):
         newNode.set("startOffset", f"{self._startOffset}%")
         if dy != 0:
             newNode.set("dy", str(-dy))
-            newNode.set("dx", str(-nodeHref.bounding_box().width/2*self._uuperpx))
+            #newNode.set("dx", str(-nodeHref.bounding_box().width/2*self._uuperpx))
         if dx != 0:
             newNode.set("dy", str(-dx))
-            newNode.set("dx", str(-nodeHref.bounding_box().height/2*self._uuperpx))
+            #newNode.set("dx", str(-nodeHref.bounding_box().height/2*self._uuperpx))
         newNode.style = style
         newNode.href = nodeHref
         #newNode.text = self.svg.add_unit(round(dimVal, self.options.precision), dimUnit)
-        newNode.text = inkex.units.render_unit(round(dimVal, self.options.precision), dimUnit)
+        (floatVal, txtUnit) = inkex.units.parse_unit(round(dimVal, self.options.precision), dimUnit)
+        txtVal = f"{floatVal:n}" if self.options.precision == 0 else f"{floatVal:.6g}"
+        newNode.text = f"{txtVal:s} {txtUnit:s}" if self.options.annotunit else txtVal
         node.add(newNode)
 
 
